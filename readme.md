@@ -24,8 +24,8 @@ Set `OTEL_EXPORTER_OTLP_ENDPOINT` to a GRPC OTLP collector, for example `localho
 Run this with IAM credentials that has access to:
 
 ```
-xray:get-trace-summaries
-xray:batch-get-traces
+xray:GetTraceSummaries
+xray:BatchGetTraces
 ```
 
 Either by deploying to EC2/ECS with an attached role or setting the following environment variables.
