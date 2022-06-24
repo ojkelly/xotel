@@ -2,7 +2,7 @@
 
 Export traces from AWS Xray and forward them to an OTEL Collector.
 
-# Testers wanted
+#### Testers wanted
 
 > This project is under rapid development.
 
@@ -25,6 +25,18 @@ Run this with IAM credentials that has access to:
 xray:get-trace-summaries
 xray:batch-get-traces
 ```
+
+Either by deploying to EC2/ECS with an attached role or setting the following environment variables.
+
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_SESSION_TOKEN
+```
+
+### Container Image
+
+Availble on docker hub at [ojkelly/xotel](https://hub.docker.com/repository/registry-1.docker.io/ojkelly/xotel/tags?page=1&ordering=last_updated).
 
 ### Configuration
 
