@@ -35,10 +35,10 @@ dockers:
     goos: linux
     goarch: arm64
     image_templates:
-      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8"
-      - "ojkelly/{{ .ProjectName }}:latest-arm64v8"
+      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64"
+      - "ojkelly/{{ .ProjectName }}:latest-arm64"
     build_flag_templates:
-      - "--platform=linux/arm64/v8"
+      - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -69,19 +69,20 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-# docker_manifests:
-#   # https://goreleaser.com/customization/docker_manifest/
-#   - name_template: ojkelly/{{ .ProjectName }}:{{ .Version }}
-#     image_templates:
-#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64
-#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8
-#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
-#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
-#   - name_template: ojkelly/{{ .ProjectName }}:latest-#     image_templates:
-#       - ojkelly/{{ .ProjectName }}:latest-amd64
-#       - ojkelly/{{ .ProjectName }}:latest-arm64v8
-#       - ojkelly/{{ .ProjectName }}:latest-armv6
-#       - ojkelly/{{ .ProjectName }}:latest-armv7
+docker_manifests:
+  # https://goreleaser.com/customization/docker_manifest/
+  - name_template: ojkelly/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
+  - name_template: ojkelly/{{ .ProjectName }}:latest-
+    image_templates:
+      - ojkelly/{{ .ProjectName }}:latest-amd64
+      - ojkelly/{{ .ProjectName }}:latest-arm64v8
+      - ojkelly/{{ .ProjectName }}:latest-armv6
+      - ojkelly/{{ .ProjectName }}:latest-armv7
 
 release:
   github:
