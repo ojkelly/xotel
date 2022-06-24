@@ -2,8 +2,8 @@ name: goreleaser
 
 on:
   push:
-    # tags:
-    # - "*"
+    tags:
+      - "*"
 
 jobs:
   goreleaser:
@@ -26,8 +26,8 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Upload assets
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: xotel
-      #     path: dist/*
+      - name: Upload assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: xotel
+          path: dist/*
