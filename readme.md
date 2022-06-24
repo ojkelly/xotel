@@ -2,7 +2,9 @@
 
 Export traces from AWS Xray and forward them to an OTEL Collector.
 
-#### Testers wanted
+![Screenshot of Xray information in Honeycomb](xotel.png)
+
+### Testers wanted
 
 > This project is under rapid development.
 
