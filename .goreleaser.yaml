@@ -77,10 +77,10 @@ docker_manifests:
       - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64
       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
-  - name_template: ojkelly/{{ .ProjectName }}:latest-
+  - name_template: ojkelly/{{ .ProjectName }}:latest
     image_templates:
       - ojkelly/{{ .ProjectName }}:latest-amd64
-      - ojkelly/{{ .ProjectName }}:latest-arm64v8
+      - ojkelly/{{ .ProjectName }}:latest-arm64
       - ojkelly/{{ .ProjectName }}:latest-armv6
       - ojkelly/{{ .ProjectName }}:latest-armv7
 
