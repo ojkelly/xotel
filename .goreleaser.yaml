@@ -95,7 +95,3 @@ snapshot:
   name_template: "{{ incpatch .Version }}-SNAPSHOT"
 changelog:
   sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
