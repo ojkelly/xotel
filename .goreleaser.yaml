@@ -3,12 +3,13 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: ./xotel
+  - main: ./cmd/main.go
     binary: xotel
     env:
       - CGO_ENABLED=0
     goos:
       - linux
+      - darwin
     goarch:
       - amd64
       - arm
@@ -18,10 +19,7 @@ builds:
       - 7
     mod_timestamp: "{{ .CommitTimestamp }}"
 dockers:
-  - image_templates:
-    - ojkelly/xotel
-
- - use: buildx
+  - use: buildx
     goos: linux
     goarch: amd64
     image_templates:
@@ -71,20 +69,19 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-docker_manifests:
-  # https://goreleaser.com/customization/docker_manifest/
-  - name_template: ojkelly/{{ .ProjectName }}:{{ .Version }}
-    image_templates:
-      - ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64
-      - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8
-      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
-      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
-  - name_template: ojkelly/{{ .ProjectName }}:latest
-    image_templates:
-      - ojkelly/{{ .ProjectName }}:latest-amd64
-      - ojkelly/{{ .ProjectName }}:latest-arm64v8
-      - ojkelly/{{ .ProjectName }}:latest-armv6
-      - ojkelly/{{ .ProjectName }}:latest-armv7
+# docker_manifests:
+#   # https://goreleaser.com/customization/docker_manifest/
+#   - name_template: ojkelly/{{ .ProjectName }}:{{ .Version }}
+#     image_templates:
+#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64
+#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8
+#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
+#       - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
+#   - name_template: ojkelly/{{ .ProjectName }}:latest-#     image_templates:
+#       - ojkelly/{{ .ProjectName }}:latest-amd64
+#       - ojkelly/{{ .ProjectName }}:latest-arm64v8
+#       - ojkelly/{{ .ProjectName }}:latest-armv6
+#       - ojkelly/{{ .ProjectName }}:latest-armv7
 
 release:
   github:
@@ -100,5 +97,5 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
