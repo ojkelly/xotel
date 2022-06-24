@@ -1,4 +1,4 @@
-# Xray to OTEL
+# XOTEL - Xray to OTEL
 
 More coming soon.
 

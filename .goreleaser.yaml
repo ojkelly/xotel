@@ -1,0 +1,104 @@
+project_name: xotel
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./xotel
+    binary: xotel
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+    mod_timestamp: "{{ .CommitTimestamp }}"
+dockers:
+  - image_templates:
+    - ojkelly/xotel
+
+ - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - "ojkelly/{{ .ProjectName }}:latest-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+      - "ojkelly/{{ .ProjectName }}:latest-arm64v8"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 6
+    image_templates:
+      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6"
+      - "ojkelly/{{ .ProjectName }}:latest-armv6"
+    build_flag_templates:
+      - "--platform=linux/arm/v6"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
+      - "ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7"
+      - "ojkelly/{{ .ProjectName }}:latest-armv7"
+    build_flag_templates:
+      - "--platform=linux/arm/v7"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+docker_manifests:
+  # https://goreleaser.com/customization/docker_manifest/
+  - name_template: ojkelly/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-arm64v8
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv6
+      - ojkelly/{{ .ProjectName }}:{{ .Version }}-armv7
+  - name_template: ojkelly/{{ .ProjectName }}:latest
+    image_templates:
+      - ojkelly/{{ .ProjectName }}:latest-amd64
+      - ojkelly/{{ .ProjectName }}:latest-arm64v8
+      - ojkelly/{{ .ProjectName }}:latest-armv6
+      - ojkelly/{{ .ProjectName }}:latest-armv7
+
+release:
+  github:
+    owner: ojkelly
+    name: xotel
+archives:
+  - format: binary
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ incpatch .Version }}-SNAPSHOT"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
