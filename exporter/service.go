@@ -45,11 +45,13 @@ func New(ctx context.Context) (*Service, error) {
 	log.Println("Create service")
 
 	cfg := getConfig()
+	log.Println("Loaded config")
 
 	awscfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get aws config: %s", err)
 	}
+	log.Println("Loaded aws config")
 
 	otlp := newExporterClient(ctx)
 	err = otlp.Start(ctx)
