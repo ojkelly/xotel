@@ -17,6 +17,7 @@ import (
 )
 
 func parseSegmentDocument(raw string) (*awsxray.Segment, error) {
+
 	seg := &awsxray.Segment{}
 	err := json.Unmarshal([]byte(raw), seg)
 

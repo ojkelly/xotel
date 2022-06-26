@@ -17,6 +17,8 @@ func (svc *Service) processTraceSummaryOutput(
 	endTime time.Time,
 	output *xray.GetTraceSummariesOutput,
 ) (err error) {
+	svc.Debug("processTraceSummaryOutput")
+
 	var wg sync.WaitGroup
 	defer wg.Wait()
 

@@ -35,6 +35,12 @@ type Service struct {
 	minLookBack time.Duration
 }
 
+func (s *Service) Debug(msg string) {
+	if s.cfg.Debug {
+		log.Println("[DEBUG]", msg)
+	}
+}
+
 func New(ctx context.Context) (*Service, error) {
 	log.Println("Create service")
 
@@ -68,7 +74,7 @@ func New(ctx context.Context) (*Service, error) {
 // TODO: concurrency is great, but now need to manage getting rate limited
 // TODO: this will ship duplicate traces, can we do better?
 func (svc *Service) Run(ctx context.Context) error {
-
+	svc.Debug("Start run")
 	ticker := time.NewTicker(svc.maxLookBack * -1)
 	updateTicker := time.NewTicker(time.Second * 10)
 
@@ -133,6 +139,8 @@ func (svc *Service) Run(ctx context.Context) error {
 			if exported != 0 {
 				log.Printf("Exported (%d) spans\n", exported)
 				atomic.AddUint64(&exported, -exported) // reset the counter
+			} else {
+				svc.Debug("didn't export any spans")
 			}
 
 		case t := <-ticker.C:
@@ -143,13 +151,11 @@ func (svc *Service) Run(ctx context.Context) error {
 				if err != nil {
 					svc.errors <- err
 				}
-
 			}()
 
 		case err := <-svc.errors:
 			if err != nil {
 				log.Println("Error: ", err)
-				svc.errors <- err
 			}
 		}
 	}

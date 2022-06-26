@@ -13,6 +13,8 @@ func (svc *Service) collectAndForwardTraces(
 	startTime time.Time,
 	endTime time.Time,
 ) error {
+	svc.Debug("collectAndForwardTraces")
+
 	output, err := svc.xry.GetTraceSummaries(ctx, &xray.GetTraceSummariesInput{
 		StartTime: aws.Time(startTime),
 		EndTime:   aws.Time(endTime),
@@ -36,6 +38,8 @@ func (svc *Service) readTracesNextPage(
 	endTime time.Time,
 	nextToken string,
 ) error {
+	svc.Debug("readTracesNextPage")
+
 	output, err := svc.xry.GetTraceSummaries(ctx, &xray.GetTraceSummariesInput{
 		StartTime: aws.Time(startTime),
 		EndTime:   aws.Time(endTime),
