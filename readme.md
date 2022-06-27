@@ -36,6 +36,14 @@ AWS_SECRET_ACCESS_KEY
 AWS_SESSION_TOKEN
 ```
 
+## Deploy with Cloudformation
+
+You can use the example [cfn-templates/Xotel.yaml](cfn-templates/Xotel.yaml)
+template to deploy XOTEL.
+
+Follow the comments in the template for the configuration you need to set, in
+particular where you want to send the X-Ray traces.
+
 ### Container Image
 
 Availble on docker hub at [ojkelly/xotel](https://hub.docker.com/repository/registry-1.docker.io/ojkelly/xotel/tags?page=1&ordering=last_updated).

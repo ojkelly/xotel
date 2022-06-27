@@ -1,0 +1,226 @@
+# Xotel Example Cloudformation
+#
+# You need to configure the following in this template:
+# The ECS:Service needs network configuration, it can be attached to your existing
+# subnets.
+#
+# The otel-collector needs config for where you want to send the X-Ray traces too.
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  XotelVersion:
+    Type: String
+    Description: Version of https://github.com/ojkelly/xotel
+    Default: "0.3.5" # or "latest"
+  XotelMaxLookBack:
+    Type: String
+    Description: How far back to look for new traces on each run
+    Default: "2m"
+  XotelMinLookBack:
+    Type: String
+    Description: The minimum time to look back for new traces. This gives the newest traces time to be collected.
+    Default: "30s"
+  OtelCollectorVersion:
+    Type: String
+    Description: Version of https://github.com/otel/opentelemetry-collector-contrib
+    Default: "0.54.0" # or "latest"
+Resources:
+  ExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "Xotel-Execution"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      Policies:
+        - PolicyName: TaskRoleMainPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: Logs
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:DescribeLogStreams"
+                Effect: Allow
+                Resource: "arn:aws:logs:*:*:*"
+  TaskRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "Xotel-Task"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      Policies:
+        - PolicyName: TaskRoleMainPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: Xray
+                Action:
+                  - "xray:GetTraceSummaries"
+                  - "xray:BatchGetTraces"
+                Effect: Allow
+                Resource: "*"
+              - Sid: Logs
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:DescribeLogStreams"
+                Effect: Allow
+                Resource: "arn:aws:logs:*:*:*"
+
+  TaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      Family: "Xotel-TaskDefinition"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Cpu: "512"
+      Memory: "1024"
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
+      Volumes:
+        - Name: otel-conf-vol
+          Host: {}
+      ContainerDefinitions:
+        - Name: "Xotel-XOTEL"
+          Essential: true
+          Image: !Sub "ojkelly/xotel:${XotelVersion}"
+          Environment:
+            - Name: XOTEL_MAX_LOOK_BACK
+              Value: !Ref XotelMaxLookBack
+            - Name: XOTEL_MIN_LOOK_BACK
+              Value: !Ref XotelMinLookBack
+            - # this variable directs traces over to the other task running collector
+              Name: OTEL_EXPORTER_OTLP_ENDPOINT
+              Value: "localhost:4317"
+            - Name: DEBUG
+              Value: "false"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: xotel
+
+        - Name: "Xotel-Collector"
+          Essential: true
+          Image: !Sub "otel/opentelemetry-collector-contrib:${OtelCollectorVersion}"
+          Command:
+            - "--config=/conf/otel-collector-config.yml"
+          Environment:
+            - Name: XOTEL_ENDPOINT
+              Value: "SET THIS"
+            - Name: XOTEL_APIKEY
+              Value: "SET THIS"
+          PortMappings:
+            - ContainerPort: 4317
+            - ContainerPort: 4318
+          MountPoints:
+            - ContainerPath: /conf
+              SourceVolume: otel-conf-vol
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: otel-collector
+
+        - # This volume container write out the configuration file required by
+          # the otel collector to a shared volume, and then exits.
+          Name: otel-conf-vol
+          Image: bash
+          Essential: false
+          Command:
+            - "-c"
+            - echo $DATA | base64 -d - | tee /conf/otel-collector-config.yml
+          Environment:
+            - # TODO: Customise this configuration to your needs
+              # This example shows environment variables sent to the collector
+              # being used to configure the values in this file.
+              Name: DATA
+              Value: !Base64 |
+                receivers:
+                  otlp:
+                    protocols:
+                      grpc:
+                      http:
+                exporters:
+                  otlphttp:
+                    endpoint: "${XOTEL_ENDPOINT}"
+                    headers:
+                      "x-honeycomb-team": "${XOTEL_APIKEY}"
+                  logging:
+                    loglevel: error
+                processors:
+                  batch:
+                service:
+                  pipelines:
+                    traces:
+                      receivers: [otlp]
+                      exporters: [otlphttp, logging]
+                      processors: [batch]
+          MountPoints:
+            - ContainerPath: /conf
+              SourceVolume: otel-conf-vol
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: otel-collector-conf
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: Xotel-Cluster
+
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: /ecs/XOTEL
+      RetentionInDays: 14
+
+  XotelService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: Xotel-Service
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          # TODO: Add in your subnets
+          # Subnets:
+          # -
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Xotel-SG
+      VpcId: "SET THIS" #TODO: Add your VPC Here
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: 0
+          ToPort: 65535
